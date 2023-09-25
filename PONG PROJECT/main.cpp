@@ -96,6 +96,19 @@ class Paddle{
 
 };
 
+class Player2Paddle: public Paddle{
+    public:
+    void Update(){
+        if (IsKeyDown(KEY_W)){
+                y= y-speed;
+        }
+        if (IsKeyDown(KEY_S)){
+            y = y + speed;
+
+        }
+        }
+};
+
 class CpuPaddle: public Paddle{
     public:
 
@@ -115,11 +128,13 @@ class CpuPaddle: public Paddle{
 
 enum GameState{MENU,IN_GAME};
 
+bool isTwoPlayerMode = false;
 
 GameState gameState = MENU;
 Ball ball;
 Paddle player;
 CpuPaddle cpu;
+Player2Paddle player2;
 
 
 int main()
@@ -143,6 +158,13 @@ int main()
     player.x = screen_width - player.width - 10;
     player.y = screen_height / 2 - player.height/2;
     player.speed = 6;
+
+    //PLAYER2//
+    player2.width = 25;
+    player2.height = 120;
+    player2.x = 10;
+    player2.y = screen_height / 2 - player2.height/2;
+    player2.speed = 6;
 
     //AI//
     cpu.height = 120;
@@ -178,6 +200,7 @@ int main()
                     if (menuY1 <= mousePos.y && mousePos.y <= menuY1 + 30){
                         // 1 player vs AI selecteduj
                         gameState = IN_GAME;
+                        isTwoPlayerMode = false;
 
                         // will be adding the necessayr chnages for 1 player 
 
@@ -185,6 +208,7 @@ int main()
                     else if (menuY2 <= mousePos.y && mousePos.y <= menuY2 + 30){
                         // 2 players selected
                         gameState = IN_GAME;
+                        isTwoPlayerMode = true;
 
                         // will be adding the necessayr chnages for 2 player 
                     }
@@ -198,7 +222,13 @@ int main()
             //UPDATE//
             ball.Update();
             player.Update();
-            cpu.Update(ball.y);
+
+            if(isTwoPlayerMode){
+                player2.Update();
+            }
+            else{
+                cpu.Update(ball.y);
+            }
 
             //Checking for collisions 
 
@@ -206,8 +236,14 @@ int main()
                 ball.speed_x *= -1;
             }
 
-            if (CheckCollisionCircleRec(Vector2{ball.x,ball.y},ball.radius,Rectangle{cpu.x,cpu.y,cpu.width,cpu.height})){
+            if(CheckCollisionCircleRec(Vector2{ball.x,ball.y},ball.radius,Rectangle{player2.x,player2.y,player2.width,player2.height})){
                 ball.speed_x *= -1;
+            }
+            else{
+                if (CheckCollisionCircleRec(Vector2{ball.x,ball.y},ball.radius,Rectangle{cpu.x,cpu.y,cpu.width,cpu.height})){
+                    ball.speed_x *= -1;
+            }
+
             }
             
 
@@ -217,8 +253,16 @@ int main()
             DrawCircle(screen_width/2,screen_height/2,150,Light_Green);
             DrawLine(screen_width/2,0,screen_width/2,screen_height,WHITE);
             ball.Draw();
-            cpu.Draw();
             player.Draw();
+
+
+            if(isTwoPlayerMode){
+                player2.Draw();
+            }
+            else{
+                cpu.Draw();
+            }
+
             DrawText(TextFormat("%i",cpu_score),screen_width/4 -20,20,80,WHITE);
             DrawText(TextFormat("%i",player_score),3*screen_width/4 -20,20,80,WHITE);
             
